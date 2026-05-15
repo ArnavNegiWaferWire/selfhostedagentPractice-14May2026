@@ -1,0 +1,26 @@
+trigger:
+  - main
+
+pool:
+  name: Practice VM Pool 14 May 2026
+
+steps:
+  - script: |
+      # Define the deployment folder
+      DEPLOY_DIR=/home/Arnav13May2026/flaskapp
+
+      # Copy app files from pipeline workspace to deployment folder
+      cp $(Build.SourcesDirectory)/app.py $DEPLOY_DIR/
+      cp $(Build.SourcesDirectory)/requirements.txt $DEPLOY_DIR/
+
+      # Set up virtual environment in deployment folder if it doesn't exist
+      if [ ! -d "$DEPLOY_DIR/venv" ]; then
+        python3 -m venv $DEPLOY_DIR/venv
+      fi
+
+      # Install dependencies
+      $DEPLOY_DIR/venv/bin/pip install -r $DEPLOY_DIR/requirements.txt
+
+      # Restart the service to pick up new code
+      sudo systemctl restart flaskapp
+    displayName: 'Build and Deploy Flask App'
