@@ -6,10 +6,21 @@ pool:
 
 steps:
   - script: |
-      cd $(Build.SourcesDirectory)
-      python3 -m venv venv
-      source venv/bin/activate
-      pip install -r requirements.txt
-      pkill gunicorn || true
-      nohup venv/bin/gunicorn --bind 0.0.0.0:5000 app:app > /tmp/gunicorn.log 2>&1 &
-    displayName: 'Deploy Flask App'
+      # Define the deployment folder
+      DEPLOY_DIR=/home/Arnav13May2026/flaskapp
+
+      # Copy app files from pipeline workspace to deployment folder
+      cp $(Build.SourcesDirectory)/app.py $DEPLOY_DIR/
+      cp $(Build.SourcesDirectory)/requirements.txt $DEPLOY_DIR/
+
+      # Set up virtual environment in deployment folder if it doesn't exist
+      if [ ! -d "$DEPLOY_DIR/venv" ]; then
+        python3 -m venv $DEPLOY_DIR/venv
+      fi
+
+      # Install dependencies
+      $DEPLOY_DIR/venv/bin/pip install -r $DEPLOY_DIR/requirements.txt
+
+      # Restart the service to pick up new code
+      sudo systemctl restart flaskapp
+    displayName: 'Build and Deploy Flask App'
